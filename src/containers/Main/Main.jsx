@@ -1,25 +1,55 @@
 import { useState, useEffect } from 'react';
 import Section from './Section/Section';
 
+const POPULAR_MOVIES_URL = 'https://api.themoviedb.org/3/movie/popular?api_key=8ef2123ffd56c908698fe9075b4b450b&language=en-US&page=1'
+const POPULAR_TV_SHOWS_URL = 'https://api.themoviedb.org/3/tv/popular?api_key=8ef2123ffd56c908698fe9075b4b450b&language=en-US&page=1';
+
+const URLS_TO_FETCH = [
+    {
+        'url': POPULAR_MOVIES_URL,
+        'type': 'movies',
+    },
+    {
+        'url': POPULAR_TV_SHOWS_URL,
+        'type': 'tvShows',
+    },
+];
+
+
 function Main(){
-    const [resultArray, setResultArray] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [dataFetched, setDataFetched] = useState([]);
+
     useEffect(() => {
-        async function getData(){
-            let res = await fetch('https://api.themoviedb.org/3/trending/movie/day?api_key=8ef2123ffd56c908698fe9075b4b450b&limit=5');
-            let data = await res.json();
-            console.log(data);
-            setResultArray(data.data);
-        } 
+        async function getData(urlToFetch, type){
+            try{
+                let res = await fetch(urlToFetch);
+                let data = await res.json();
+                
+                return {[type]: data.results};
+            }catch(err) {
+                setLoading(false);
+                throw Error(err);
+            }
+        }
 
-        getData()
-        console.log(resultArray);
+        let pendingPromises = [];
+        URLS_TO_FETCH.forEach(singleUrl => {
+            pendingPromises.push(getData(singleUrl.url, singleUrl.type));        
+        });
+
+        Promise.all(pendingPromises).then(dataReturned => {
+            setDataFetched(dataReturned);
+            setLoading(false);
+        });
     }, [])
-    console.log(resultArray);
 
+    !loading && console.log(dataFetched);
+    
     return(
         <div className="main-container">
             Simple main
-            { resultArray.length &&
+            { dataFetched.length &&
                 "hola"
                 /* resultArray.map((dataArray, index) => {
                     return <Section
