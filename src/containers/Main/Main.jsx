@@ -11,7 +11,7 @@ const URLS_TO_FETCH = [
     },
     {
         'url': POPULAR_TV_SHOWS_URL,
-        'type': 'tvShows',
+        'type': 'shows',
     },
 ];
 
@@ -45,20 +45,20 @@ function Main(){
     }, [])
 
     !loading && console.log(dataFetched);
-    
+
     return(
-        <div className="main-container">
+        <main className="main-container">
             Simple main
-            { dataFetched.length &&
-                "hola"
-                /* resultArray.map((dataArray, index) => {
+            { !loading &&
+                dataFetched.map((dataArray, index) => {
+                    console.log(Object.keys(dataArray)[0]);
                     return <Section
                         key={index}
                         dataToDisplay={dataArray}
                     />
-                }) */
+                })
             }
-        </div>
+        </main>
     );
 }
 
