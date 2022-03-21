@@ -1,0 +1,27 @@
+@import './CardRow/cardrow';
+
+.section-container{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: 400px;
+    width: 100vw;
+    overflow: scroll;
+    padding: 0 20px;
+    
+    &__title{
+        margin: 10px 20px;
+        padding: 10px 20px;
+    }
+
+
+    &__cards{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+        height: 100%;
+        margin: 0 20px;
+        padding: 0 20px;
+    }
+}

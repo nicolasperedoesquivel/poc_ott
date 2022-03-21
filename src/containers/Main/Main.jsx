@@ -1,65 +1,109 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, useRef, memo} from 'react';
 import Section from './Section/Section';
-
-const POPULAR_MOVIES_URL = 'https://api.themoviedb.org/3/movie/popular?api_key=8ef2123ffd56c908698fe9075b4b450b&language=en-US&page=1'
-const POPULAR_TV_SHOWS_URL = 'https://api.themoviedb.org/3/tv/popular?api_key=8ef2123ffd56c908698fe9075b4b450b&language=en-US&page=1';
-
-const URLS_TO_FETCH = [
-    {
-        'url': POPULAR_MOVIES_URL,
-        'type': 'movies',
-    },
-    {
-        'url': POPULAR_TV_SHOWS_URL,
-        'type': 'shows',
-    },
-];
+import { DataContext } from '../../hooks/DataContext';
 
 
-function Main(){
-    const [loading, setLoading] = useState(true);
-    const [dataFetched, setDataFetched] = useState([]);
+function Main() {
+    const [activeSection, setActiveSection] = useState(0);
+    const [activeCard, setActiveCard] = useState(0);
+    const { loading, dataFetched, structureArray } = useContext(DataContext);
+
+    /* const changeActive = useCallback(        
+        (e) => {
+            console.log("inside", structureArray);
+                if (e.key === "ArrowUp") {
+                    setActiveSection((activeSection) => (activeSection - 1 < 0 ? structureArray.length - 1 : activeSection - 1));
+                } else if (e.key === "ArrowDown") {
+                    setActiveSection((activeSection) => (activeSection + 1 > structureArray.length - 1 ? 0 : activeSection + 1));
+                } else if (e.key === "ArrowLeft") {
+                    // If supposed previous child is < 0 set it to last child
+                    setActiveCard((activeCard) => (activeCard - 1 < 0 ? structureArray[activeSection].length - 1 : activeCard - 1));
+                } else if (e.key === "ArrowRight") {
+                    // If supposed next child is > length -1 set it to first child
+                    setActiveCard((activeCard) => (activeCard + 1 > structureArray[activeSection].length - 1 ? 0 : activeCard + 1));
+                } 
+        }, [structureArray]
+    ); */
+    const cardRef = useRef([]);
 
     useEffect(() => {
-        async function getData(urlToFetch, type){
-            try{
-                let res = await fetch(urlToFetch);
-                let data = await res.json();
+        const changeActive = (e) => {
+            e.preventDefault();
+            if (e.key === "ArrowUp") {
+                setActiveSection((activeSection) =>
+                    activeSection - 1 < 0
+                        ? structureArray.length - 1
+                        : activeSection - 1
+                );
+            } else if (e.key === "ArrowDown") {
+                setActiveSection((activeSection) =>
+                    activeSection + 1 > structureArray.length - 1
+                        ? 0
+                        : activeSection + 1
+                );
+            } else if (e.key === "ArrowLeft") {
+                setActiveCard((activeCard) =>
+                    activeCard - 1 < 0
+                        ? structureArray[activeSection].length - 1
+                        : activeCard - 1
+                );
+                let cardIndex =
+                    activeCard - 1 < 0
+                        ? structureArray[activeSection].length - 1
+                        : activeCard - 1;
+                const prevItem = cardRef.current[activeSection][cardIndex];
+                prevItem && prevItem.scrollIntoView({ block: "start" });
+
+                console.log("ArrowLeft", activeCard);
+            } else if (e.key === "ArrowRight") {
+                setActiveCard((activeCard) =>
+                    activeCard + 1 > structureArray[activeSection].length - 1
+                        ? 0
+                        : activeCard + 1
+                );
+                let cardIndex =
+                    activeCard + 1 > structureArray[activeSection].length - 1
+                        ? 0
+                        : activeCard + 1;
+                const nextItem = cardRef.current[activeSection][cardIndex];
+                nextItem && nextItem.scrollIntoView({ block: "end" })
+                console.log("ArrowRight", activeCard);
+
                 
-                return {[type]: data.results};
-            }catch(err) {
-                setLoading(false);
-                throw Error(err);
             }
-        }
+        };
 
-        let pendingPromises = [];
-        URLS_TO_FETCH.forEach(singleUrl => {
-            pendingPromises.push(getData(singleUrl.url, singleUrl.type));        
-        });
+        document.addEventListener("keydown", changeActive);
+        return () => document.removeEventListener("keydown", changeActive);
+    }, [activeSection, activeCard, structureArray]);
 
-        Promise.all(pendingPromises).then(dataReturned => {
-            setDataFetched(dataReturned);
-            setLoading(false);
-        });
-    }, [])
+    console.log(cardRef);
+    
+    
 
-    !loading && console.log(dataFetched);
-
-    return(
+    return (
         <main className="main-container">
-            Simple main
-            { !loading &&
+            {!loading &&
                 dataFetched.map((dataArray, index) => {
-                    console.log(Object.keys(dataArray)[0]);
-                    return <Section
-                        key={index}
-                        dataToDisplay={dataArray}
-                    />
-                })
-            }
+                    return (
+                        <Section
+                            key={index}
+                            dataToDisplay={dataArray}
+                            activeSection={`${
+                                index === activeSection ? activeSection : null
+                            }`}
+                            setActiveCard={setActiveCard}
+                            activeCard={`${
+                                index === activeSection ? activeCard : null
+                            }`}
+                            setActiveSection={setActiveSection}
+                            idSection={index}
+                            cardRef={cardRef}
+                        />
+                    );
+                })}
         </main>
     );
 }
 
-export default Main;
+export default memo(Main);
